@@ -1,4 +1,2 @@
 # DataScienceStudy
-
-
-Lin added this line. this is the git repo for my data science class, it was created automatically
+Code Repo for Lin's Data Science summer bridge classes
