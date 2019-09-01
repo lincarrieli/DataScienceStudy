@@ -1,0 +1,67 @@
+---
+title: "DATA607-Assignment1"
+author: "Lin Li"
+date: "8/29/2019"
+output:
+  html_document:
+    df_print: paged
+---
+
+1. load the mushroom data, display 20 rows.
+```{r}
+mushrooms <- read.table("agaricus-lepiota.data")
+head(mushrooms,20)
+```
+
+
+2. Spliting column/attribute V1.
+```{r}
+library(stringr)
+splitmushrooms <- data.frame(mushrooms, do.call(rbind, str_split(mushrooms$V1, ",")))
+splitmushrooms
+```
+ 
+
+3. Rename columns, display 10 rows.
+
+```{r}
+library(plyr)
+newmushrooms <- rename(splitmushrooms, c("X1"="edibility", "X2"="cap-shape", "X3"="cap-surface", "X4"="cap-color", "X5"="bruises?", "X6"="odor", "X7"="gill-attachment", "X8"="gill-spacing", "X9"="gill-size", "X10"="gill-color", "X11"="stalk-shape", "X12"="stalk-root", "X13"="stalk-surface-above-ring", "X14"="stalk-surfacw-below-ring", "X15"="stall-color-above-ring", "X16"="stalk-color-below-ring", "X17"="veil-type", "X18"="veil-color", "X19"="ring-number", "X20"="ring-type", "X21"="spore-print-color", "X22"="population", "X23"="habitat"))
+head(newmushrooms, 10)
+
+```
+
+
+4. Replace abbreviations and extract specific columns.
+
+```{r}
+newmushrooms2 <- newmushrooms[, c(2, 7, 12, 24)]
+newmushrooms2
+newmushrooms2$edibility <- as.character(newmushrooms2$edibility)
+newmushrooms2$odor <- as.character(newmushrooms2$odor)
+newmushrooms2$`stalk-shape` <-as.character(newmushrooms2$`stalk-shape`)
+newmushrooms2$habitat <- as.character(newmushrooms2$habitat)
+newmushrooms2$edibility[newmushrooms2$edibility == "p"] <- "poisonous"
+newmushrooms2$edibility[newmushrooms2$edibility == "e"] <- "edible"
+newmushrooms2$odor[newmushrooms2$odor == "p"] <- "pungent"
+newmushrooms2$odor[newmushrooms2$odor == "a"] <- "almond"
+newmushrooms2$odor[newmushrooms2$odor == "l"] <- "anise"
+newmushrooms2$odor[newmushrooms2$odor == "n"] <- "none"
+newmushrooms2$`stalk-shape`[newmushrooms2$`stalk-shape` == "e"] <- "enlarging"
+newmushrooms2$`stalk-shape`[newmushrooms2$`stalk-shape` == "t"] <- "tapering"
+newmushrooms2$habitat[newmushrooms2$habitat == "u"] <- "urban"
+newmushrooms2$habitat[newmushrooms2$habitat == "g"] <- "grasses"
+newmushrooms2$habitat[newmushrooms2$habitat == "m"] <- "meadows"
+newmushrooms2$habitat[newmushrooms2$habitat == "d"] <- "woods"
+newmushrooms2
+
+```
+
+5. Subset dataframe.
+
+```{r}
+subset(newmushrooms2, odor == "almond" & habitat != c("urban"))
+subset(newmushrooms2, `stalk-shape` == "tapering")
+```
+
+
