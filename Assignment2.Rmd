@@ -1,0 +1,15 @@
+---
+title: "Connection"
+author: "Lin Li"
+date: "9/8/2019"
+output: html_document
+---
+
+Installed package RMySQL
+```{r}
+con <- dbConnect(RMySQL::MySQL(), dbname = "Movies", user = "root", password = "")
+qry <- dbGetQuery(conn = con, statement = "SELECT * FROM Movies WHERE Rating > 3")
+qry
+
+```
+
