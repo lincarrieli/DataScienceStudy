@@ -1,0 +1,57 @@
+---
+title: "Tidying & transforming data"
+author: "Lin Li"
+date: "9/24/2019"
+output: html_document
+---
+
+1. read .csv file.
+
+```{r}
+delays <- read.csv("delays.csv", header = TRUE)
+delays
+
+```
+
+2. Tidy and transform data.
+
+```{r}
+#Filling in empty headers.
+
+names(delays)[1] <- "airlines"
+names(delays)[2] <- "status"
+
+#Transforming from "wide" to long; assigned "delayed" and "on time" as variables each as its own column.
+
+library(tidyr)
+delays1 <- gather(delays, "city", "count", 3:7) 
+delays2 <- spread(delays1, status, count)
+names(delays2)[4] <- "on.time"
+delays2
+```
+
+3. Perform analysis to compare the arrival delays for two airlines.
+```{r}
+library(dplyr)
+
+# mean arrival delays of the two airlines
+delays2 %>% group_by(airlines) %>% summarise(mean = mean(delayed))
+     
+```
+
+4. t-test and boxplot.
+```{r}
+arr_delays <- delays2 %>% 
+    filter(airlines == "Alaska" | airlines == "AM West") %>% 
+    select(airlines, delayed)
+#Alaska summary stats
+summary(arr_delays %>% filter(airlines == "Alaska") %>% .$delayed)
+#AM West summary stats
+summary(arr_delays %>% filter(airlines == "AM West") %>% .$delayed)
+
+library(ggplot2)
+ggplot(arr_delays, aes(airlines, delayed)) + geom_boxplot()
+
+t.test(delayed ~ airlines, data = delays2)
+```
+
