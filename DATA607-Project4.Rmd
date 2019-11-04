@@ -1,0 +1,124 @@
+---
+title: "DATA607-Project4"
+author: "Lin Li"
+date: "11/2/2019"
+output: html_document
+---
+1. Basic navigation of spam corpus
+```{r}
+# load libraries
+library(tm)
+library(stringi)
+
+# see some information about the corpus
+spam_docs <- Corpus(DirSource("~/Desktop/DATA607/Week10/spamham/spam2"))
+spam_docs
+```
+
+
+2. Pre-possessing
+```{r}
+library(tm)
+library(stringi)
+library(SnowballC)
+library(stringr)
+library(wordcloud)
+
+# remove special characters/nonASCII
+removeNonASCII <- function(x) str_replace(x, '[^\\x00-\\x7F]', ' ')
+spam_docs <- tm_map(spam_docs, removeNonASCII)
+
+# remove punctuation - replace punctuation with a space
+spam_docs <- tm_map(spam_docs, removePunctuation)
+
+# remove numbers
+spam_docs <- tm_map(spam_docs, removeNumbers)
+
+# convert to lower case
+spam_docs <- tm_map(spam_docs, content_transformer(stri_trans_tolower))
+
+# remove extra white space
+spam_docs <- tm_map(spam_docs, stripWhitespace)
+
+# remove stopwords
+spam_docs <- tm_map(spam_docs, removeWords,stopwords())
+
+# remove URLs
+removeURL <- function(x) gsub("http[[:alnum:]]*", "", x)
+spam_docs <- tm_map(spam_docs, removeURL) 
+
+#writeLines(as.character(spam_docs[[3]]))
+
+# stemming
+spam_docs <- tm_map(spam_docs, stemDocument)
+spam_docs
+#writeLines(as.character(spam_docs[[4]]))
+```
+
+
+3. The Document Term Matrix
+```{r}
+spam_dtm <- DocumentTermMatrix(spam_docs, control = list(wordLengths = c(3, Inf)))
+inspect(spam_dtm)
+```
+
+4. Find frequency terms and build simple word cloud
+```{r}
+findFreqTerms(spam_dtm, 1000)
+freq = data.frame(sort(colSums(as.matrix(spam_dtm)), decreasing=TRUE))
+wordcloud(rownames(freq), freq[,1], max.words=50, colors=brewer.pal(1, "Dark2"))
+```
+
+5. Navigating ham corpus
+```{r}
+ham_docs <- Corpus(DirSource("~/Desktop/DATA607/Week10/spamham/easy_ham"))
+ham_docs
+```
+
+6. Pre-prosessing ham docs
+```{r}
+library(tm)
+library(stringi)
+library(SnowballC)
+library(stringr)
+
+removeNonASCII <- function(x) str_replace(x, '[^\\x00-\\x7F]', ' ')
+
+# remove punctuation - replace punctuation with a space
+ham_docs <- tm_map(ham_docs, removePunctuation)
+ham_docs <- tm_map(ham_docs, removeNonASCII)
+
+# remove numbers
+ham_docs <- tm_map(ham_docs, removeNumbers)
+
+# convert to lower case
+ham_docs <- tm_map(ham_docs, content_transformer(stri_trans_tolower))
+
+# remove extra white space
+ham_docs <- tm_map(ham_docs, stripWhitespace)
+
+# remove stopwords
+ham_docs <- tm_map(ham_docs, removeWords,stopwords())
+
+# remove URLs
+removeURL <- function(x) gsub("http[[:alnum:]]*", "", x)
+ham_docs <- tm_map(ham_docs, removeURL) 
+
+# stemming
+ham_docs <- tm_map(ham_docs, stemDocument)
+ham_docs
+#writeLines(as.character(ham_docs[[4]]))
+```
+
+7. The Document Term Matrix
+```{r}
+ham_dtm <- DocumentTermMatrix(ham_docs, control = list(wordLengths = c(3, Inf)))
+inspect(ham_dtm)
+```
+
+8. Find frequency terms in ham corpus and build a simple word cloud
+```{r}
+findFreqTerms(ham_dtm, 1000)
+freq = data.frame(sort(colSums(as.matrix(ham_dtm)), decreasing=TRUE))
+wordcloud(rownames(freq), freq[,1], max.words=50, colors=brewer.pal(1, "Dark2"))
+```
