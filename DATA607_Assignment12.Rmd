@@ -1,0 +1,54 @@
+---
+title: "DATA706_Week12"
+author: "Lin Li"
+date: "11/16/2019"
+output: html_document
+---
+For this assignment, you should take information from a relational database and migrate it to a NoSQL database of your own choosing.
+
+For the NoSQL database, you may use MongoDB, Neo4j, or another NoSQL database of your choosing.
+
+Your migration process needs to be reproducible.  R code is encouraged, but not required.  You should also briefly describe the advantages and disadvantages of storing the data in a relational database vs. your NoSQL database.
+
+### Download MongoDB and inserting data
+
+Downloaded & installed MongoDB
+
+```{r}
+# install 'mongolite' package
+
+#install.packages("mongolite")
+```
+
+```{r}
+# load mongolite package and "flights" database
+
+library(mongolite)
+Flights <- data.table::fread("flights(1).csv")
+names(Flights)
+
+# create collection, connection, and database
+
+Flights_collection <- mongo(collection = "Flights", db = "travel")
+Flights_collection$insert(Flights)
+
+# check to see if data is inserted & number of records in collection
+
+Flights_collection$count()
+```
+
+### Performing queries and retrieving data
+
+```{r}
+# displaying data for one record
+Flights_collection$iterate()$one()
+
+# how many cities do flights depart from?
+length(Flights_collection$distinct("depart"))
+
+# how many flights arrive in Boston?
+length(Flights_collection$distinct("arrive"))
+```
+Storing data in a relational database is simple and east to use, the relational model is as tables consisting of columns and row that are easy and natural to understand. It's made possible for high level query language like SQL. It's structural and data independent, and it's scalable. The disadvantages are that the database has limits on field lenghts and can get too complex as the amount of data grows. The relational database systems are not designed to handel more complex applications such as images and multimedia.
+
+NoSQL databases can handle large volumes of structured, semi-structured, and non-structured data and need less management. They use object-oriented programming that is easy to use and handle, support quick iteration and frequent code pushes. NoSQL databases tend to be open source which means low cost in developing, implementing and sharing software. However, most NoSQL oftern do not perform ACID transactions and lack of standardization. NoSQL are less mature which means they are less stable and have less functionalities.
