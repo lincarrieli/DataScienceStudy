@@ -1,0 +1,133 @@
+---
+title: "DATA607_Final Project"
+author: "Lin Li"
+date: "11/18/2019"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+## Introduction
+
+Climate change presents significant challenges to ecological conservation, scientists are looking to model projections of species distributions under climate change to learn species' resilience and response to changes in the environment, thus to inform management strategies.  Species distribution models can be constructed in a variety of ways and result in a range of outputs. In this project, I am looking into using the r package to build distribution models for a plant species in the Brazil Nut family. 
+
+Install required packages
+```{r}
+#install.packages("sp")
+#instill.packages("dismo")
+#install.packages("spThin")
+```
+
+Load the species occurrence file
+```{r}
+Lecy <- read.csv("Lecythidaceae1.csv", header = TRUE, sep = ",")
+```
+
+Explore the dataset
+```{r}
+dim(Lecy)
+colnames(Lecy)
+```
+
+perform data transformation
+```{r}
+library(tidyr)
+library(dplyr)
+
+# select the columns important for the SDM analysis
+# select records with coordinates and elevation
+
+FilteredLecy <- 
+Lecy %>% 
+    select(genus, species, scientificName, decimalLatitude, decimalLongitude, elevation) %>% 
+    filter(!is.na(decimalLatitude) & !is.na(decimalLongitude) & elevation != "")
+```
+
+Compare mean elevation between two selected species
+```{r}
+library(ggplot2)
+elev <-
+FilteredLecy %>% 
+    filter(species %in%  c("Eschweilera alata", "Eschweilera biflava")) %>% 
+    group_by(species) %>% 
+    summarise(mean_elev = mean(elevation))
+elev
+
+graph.elev <-
+    ggplot(data = elev, aes(x = species, y = mean_elev)) +
+    geom_bar(stat = "identity", width = 0.5)
+graph.elev
+```
+
+Select species of interest for SDM
+```{r}
+library(dplyr)
+SelectSp1 <-
+FilteredLecy %>% 
+    filter(species == "Eschweilera alata") %>% 
+    select(decimalLongitude, decimalLatitude)
+``` 
+
+
+```{r}
+# determine geographic extent of our data:
+library(raster)
+max.lat <- ceiling(max(SelectSp1$decimalLatitude)) 
+min.lat <- floor(min(SelectSp1$decimalLatitude))
+max.lon <- ceiling(max(SelectSp1$decimalLongitude))
+min.lon <- floor(min(SelectSp1$decimalLongitude))
+geo.extent <- extent(x = c(min.lon, max.lon, min.lat, max.lat))
+```
+
+```{r}
+# load data for map and plot the base map
+library(maptools)
+gpclibPermit()
+data(wrld_simpl)
+plot(wrld_simpl, 
+     xlim = c(min.lon, max.lon),
+     ylim = c(min.lat, max.lat),
+     axes = TRUE, 
+     col = "grey95")
+
+# add points for the  selected species
+points(x = SelectSp1$decimalLongitude,
+       y = SelectSp1$decimalLatitude,
+       col = "olivedrab",
+       pch = 20,
+       cex = 1.25)
+box()
+```
+
+Use the predict model from dismo package to generate the probability of occurrence
+```{r}
+library(dismo)
+bioclim.data <- getData(name = "worldclim",
+                        var = "bio",
+                        res = 2.5)
+
+bc.model <- bioclim(x = bioclim.data, p = SelectSp1)
+predict.occ <- dismo::predict(object =  bc.model, x = bioclim.data, ext = geo.extent)
+
+# plot the map for the first selected species
+plot(wrld_simpl, 
+     xlim = c(min.lon, max.lon),
+     ylim = c(min.lat, max.lat),
+     axes = TRUE, 
+     col = "grey95")
+plot(predict.occ, add = TRUE)
+plot(wrld_simpl, add = TRUE, border = "grey5")
+points(SelectSp1$longitude, 
+       SelectSp1$latitude, 
+       col = "olivedrab", 
+       pch = 20, 
+       cex = 2)
+box()
+```
+
+Map shows a restricted suitability for E. alata. Suitable areas are mostly close to the true occurrences indicated by the green on the map. This project does not intend to produce an accurate evaluation for whether a particular point on the landscape is suitable for a species. An accurate predictive model results from repetitive training and testing, evaluating sampling bias, and extensive knowledge of the species and GIS modeling.
+
+
+### Reference:
+1.https://jcoliver.github.io/learn-r/011-species-distribution-models.html
+2.https://cran.r-project.org/web/packages/dismo/vignettes/sdm.pdf
